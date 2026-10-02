@@ -30,7 +30,7 @@ function ProductList() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/products",
+        "${import.meta.env.VITE_API_URL}/api/products",
         {
           method: "GET",
           headers: {
@@ -73,7 +73,7 @@ function ProductList() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${id}`,
+       "${import.meta.env.VITE_API_URL}/api/products/${id}",
         {
           method: "DELETE",
           headers: {

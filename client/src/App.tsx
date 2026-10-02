@@ -39,7 +39,7 @@ function App() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/me",
+        "${import.meta.env.VITE_API_URL}/api/auth/me",
         {
           method: "GET",
           headers: {
@@ -76,7 +76,7 @@ function App() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/products/dashboard/stats",
+        "${import.meta.env.VITE_API_URL}/api/products/dashboard/stats",
         {
           method: "GET",
           headers: {

@@ -14,7 +14,42 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
     throw new Error("JWT_SECRET is not configured");
 }
+// =========================
+// REGISTER
+// =========================
+router.post("/register", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                message: "Name, email and password are required",
+            });
+        }
+        const existingUser = await db_1.default.query("SELECT id FROM users WHERE email = $1", [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({
+                message: "User already exists",
+            });
+        }
+        const hashedPassword = await bcrypt_1.default.hash(password, 10);
+        const result = await db_1.default.query(`INSERT INTO users (name, email, password)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, email`, [name, email, hashedPassword]);
+        return res.status(201).json({
+            message: "User registered successfully",
+            user: result.rows[0],
+        });
+    }
+    catch (error) {
+        console.error("Registration error:", error);
+        return res.status(500).json({
+            message: "Server error",
+        });
+    }
+});
+// =========================
 // LOGIN
+// =========================
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -42,7 +77,7 @@ router.post("/login", async (req, res) => {
         }, JWT_SECRET, {
             expiresIn: "1d",
         });
-        res.json({
+        return res.json({
             message: "Login successful",
             token,
             user: {
@@ -54,12 +89,14 @@ router.post("/login", async (req, res) => {
     }
     catch (error) {
         console.error("Login error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
 });
-// PROTECTED USER ROUTE
+// =========================
+// GET CURRENT USER
+// =========================
 router.get("/me", authMiddleware_1.authenticateToken, async (req, res) => {
     try {
         const user = req.user;
@@ -69,14 +106,14 @@ router.get("/me", authMiddleware_1.authenticateToken, async (req, res) => {
                 message: "User not found",
             });
         }
-        res.json({
+        return res.json({
             message: "Authenticated user",
             user: result.rows[0],
         });
     }
     catch (error) {
         console.error("User fetch error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }

@@ -4,6 +4,8 @@ type LoginProps = {
   onLogin: () => void;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +21,7 @@ function Login({ onLogin }: LoginProps) {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
@@ -43,7 +45,7 @@ function Login({ onLogin }: LoginProps) {
 
       onLogin();
     } catch (error) {
-      console.error(error);
+      console.error("Login error:", error);
       setError("Unable to connect to server");
     } finally {
       setLoading(false);
@@ -56,12 +58,8 @@ function Login({ onLogin }: LoginProps) {
 
         <div className="login-logo">
           <div className="logo-icon">PF</div>
-
           <h1>ProductFlow</h1>
-
-          <p>
-            Manage your products with ease
-          </p>
+          <p>Manage your products with ease</p>
         </div>
 
         <div className="login-content">
