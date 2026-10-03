@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AddProduct from "./AddProductForm";
 import ProductList from "./ProductList";
+import Login from "./Login";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -18,6 +19,10 @@ type DashboardStats = {
 };
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    Boolean(localStorage.getItem("token"))
+  );
+
   const [user, setUser] = useState<User | null>(null);
 
   const [stats, setStats] = useState<DashboardStats>({
@@ -26,21 +31,18 @@ function App() {
     total_value: 0,
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
-
-  // ================================
-  // FETCH CURRENT USER
-  // ================================
   const fetchUser = async () => {
-    try {
-      if (!token) {
-        setError("Please login first");
-        return;
-      }
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      setIsLoggedIn(false);
+      return false;
+    }
+
+    try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
         method: "GET",
         headers: {
@@ -49,27 +51,32 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to connect to server");
+        localStorage.removeItem("token");
+        setUser(null);
+        setIsLoggedIn(false);
+        return false;
       }
 
       const data = await response.json();
 
       setUser(data.user);
+
+      return true;
     } catch (error) {
       console.error("User fetch error:", error);
       setError("Unable to connect to server");
+      return false;
     }
   };
 
-  // ================================
-  // FETCH DASHBOARD STATS
-  // ================================
   const fetchDashboardStats = async () => {
-    try {
-      if (!token) {
-        return;
-      }
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      return;
+    }
+
+    try {
       const response = await fetch(
         `${API_URL}/api/products/dashboard/stats`,
         {
@@ -97,46 +104,48 @@ function App() {
     }
   };
 
-  // ================================
-  // LOAD DASHBOARD
-  // ================================
   const loadDashboard = async () => {
     setLoading(true);
     setError("");
 
-    await Promise.all([
-      fetchUser(),
-      fetchDashboardStats(),
-    ]);
+    const validUser = await fetchUser();
+
+    if (validUser) {
+      await fetchDashboardStats();
+    }
 
     setLoading(false);
   };
 
-  // ================================
-  // LOAD ON PAGE OPEN
-  // ================================
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
-  // ================================
-  // LOGOUT
-  // ================================
-  const logout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+
+    setUser(null);
+
+    setStats({
+      total_products: 0,
+      active_products: 0,
+      total_value: 0,
+    });
+
+    setError("");
+    setIsLoggedIn(false);
   };
 
-  // ================================
-  // REFRESH
-  // ================================
-  const handleRefresh = () => {
-    loadDashboard();
-  };
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadDashboard();
+    }
+  }, [isLoggedIn]);
 
-  // ================================
-  // LOADING SCREEN
-  // ================================
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   if (loading) {
     return (
       <div className="app-container">
@@ -147,13 +156,9 @@ function App() {
     );
   }
 
-  // ================================
-  // DASHBOARD
-  // ================================
   return (
     <div className="app-container">
 
-      {/* ================= HEADER ================= */}
       <header className="app-header">
 
         <div className="brand-section">
@@ -173,14 +178,14 @@ function App() {
 
           <button
             className="refresh-button"
-            onClick={handleRefresh}
+            onClick={loadDashboard}
           >
             Refresh
           </button>
 
           <button
             className="logout-button"
-            onClick={logout}
+            onClick={handleLogout}
           >
             Logout
           </button>
@@ -189,10 +194,8 @@ function App() {
 
       </header>
 
-      {/* ================= MAIN ================= */}
       <main className="dashboard">
 
-        {/* ================= WELCOME ================= */}
         <section className="welcome-section">
 
           <h2>
@@ -211,7 +214,6 @@ function App() {
 
         </section>
 
-        {/* ================= STATS ================= */}
         <section className="stats-container">
 
           <div className="stat-card">
@@ -240,23 +242,20 @@ function App() {
 
         </section>
 
-        {/* ================= ERROR ================= */}
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
 
-        {/* ================= ADD PRODUCT ================= */}
         <section className="product-section">
 
           <AddProduct
-            onProductAdded={handleRefresh}
+            onProductAdded={loadDashboard}
           />
 
         </section>
 
-        {/* ================= PRODUCT LIST ================= */}
         <section className="product-section">
 
           <ProductList />
