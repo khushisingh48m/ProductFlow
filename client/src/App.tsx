@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import Login from "./Login";
 import AddProduct from "./AddProductForm";
 import ProductList from "./ProductList";
 import "./App.css";
 
-type Stats = {
-  total_products: string;
-  active_products: string;
-  inactive_products: string;
-  total_value: string;
-};
+const API_URL = import.meta.env.VITE_API_URL;
 
 type User = {
   id: number;
@@ -17,66 +11,67 @@ type User = {
   email: string;
 };
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
+type DashboardStats = {
+  total_products: number;
+  active_products: number;
+  total_value: number;
+};
 
-  const [stats, setStats] = useState<Stats | null>(null);
+function App() {
   const [user, setUser] = useState<User | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    total_products: 0,
+    active_products: 0,
+    total_value: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // FETCH USER DETAILS
+  const token = localStorage.getItem("token");
+
+  // ================================
+  // FETCH CURRENT USER
+  // ================================
   const fetchUser = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        setIsLoggedIn(false);
+        setError("Please login first");
         return;
       }
 
-      const response = await fetch(
-        "${import.meta.env.VITE_API_URL}/api/auth/me",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-        return;
+        throw new Error("Unable to connect to server");
       }
+
+      const data = await response.json();
 
       setUser(data.user);
     } catch (error) {
       console.error("User fetch error:", error);
+      setError("Unable to connect to server");
     }
   };
 
+  // ================================
   // FETCH DASHBOARD STATS
+  // ================================
   const fetchDashboardStats = async () => {
     try {
-      setLoading(true);
-      setError("");
-
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        setIsLoggedIn(false);
         return;
       }
 
       const response = await fetch(
-        "${import.meta.env.VITE_API_URL}/api/products/dashboard/stats",
+        `${API_URL}/api/products/dashboard/stats`,
         {
           method: "GET",
           headers: {
@@ -85,192 +80,188 @@ function App() {
         }
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("token");
-          setIsLoggedIn(false);
-          return;
-        }
-
-        throw new Error(
-          data.message || "Failed to fetch dashboard"
-        );
+        throw new Error("Unable to load dashboard data");
       }
 
-      setStats(data.stats);
+      const data = await response.json();
+
+      setStats({
+        total_products: Number(data.total_products || 0),
+        active_products: Number(data.active_products || 0),
+        total_value: Number(data.total_value || 0),
+      });
     } catch (error) {
-      console.error(error);
+      console.error("Dashboard stats error:", error);
       setError("Unable to load dashboard data");
-    } finally {
-      setLoading(false);
     }
   };
 
+  // ================================
+  // LOAD DASHBOARD
+  // ================================
+  const loadDashboard = async () => {
+    setLoading(true);
+    setError("");
+
+    await Promise.all([
+      fetchUser(),
+      fetchDashboardStats(),
+    ]);
+
+    setLoading(false);
+  };
+
+  // ================================
+  // LOAD ON PAGE OPEN
+  // ================================
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchUser();
-      fetchDashboardStats();
-    }
-  }, [isLoggedIn]);
+    loadDashboard();
+  }, []);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
+  // ================================
+  // LOGOUT
+  // ================================
+  const logout = () => {
     localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setStats(null);
-    setUser(null);
+    window.location.href = "/login";
   };
 
-  if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+  // ================================
+  // REFRESH
+  // ================================
+  const handleRefresh = () => {
+    loadDashboard();
+  };
+
+  // ================================
+  // LOADING SCREEN
+  // ================================
+  if (loading) {
+    return (
+      <div className="app-container">
+        <div className="loading">
+          Loading ProductFlow...
+        </div>
+      </div>
+    );
   }
 
+  // ================================
+  // DASHBOARD
+  // ================================
   return (
-    <div className="dashboard">
+    <div className="app-container">
 
-      {/* HEADER */}
-      <header className="dashboard-header">
+      {/* ================= HEADER ================= */}
+      <header className="app-header">
 
         <div className="brand-section">
-          <div className="brand-logo">
+
+          <div className="logo">
             PF
           </div>
 
           <div>
             <h1>ProductFlow</h1>
-
-            <p>
-              Product Management Dashboard
-            </p>
+            <p>Product Management Dashboard</p>
           </div>
+
         </div>
 
         <div className="header-actions">
 
-          {user && (
-            <div className="user-info">
-              <div className="user-avatar">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-
-              <div>
-                <span className="welcome-text">
-                  Welcome back
-                </span>
-
-                <strong>
-                  {user.name}
-                </strong>
-              </div>
-            </div>
-          )}
-
-          <button onClick={fetchDashboardStats}>
+          <button
+            className="refresh-button"
+            onClick={handleRefresh}
+          >
             Refresh
           </button>
 
-          <button onClick={handleLogout}>
+          <button
+            className="logout-button"
+            onClick={logout}
+          >
             Logout
           </button>
 
         </div>
+
       </header>
 
+      {/* ================= MAIN ================= */}
+      <main className="dashboard">
 
-      {/* MAIN */}
-      <main>
+        {/* ================= WELCOME ================= */}
+        <section className="welcome-section">
 
-        <div className="dashboard-title">
-          <div>
-            <h2>Dashboard Overview</h2>
+          <h2>
+            Dashboard Overview
+          </h2>
+
+          <p>
+            Track and manage your products from one place.
+          </p>
+
+          {user && (
+            <p className="welcome-user">
+              Welcome, {user.name} 👋
+            </p>
+          )}
+
+        </section>
+
+        {/* ================= STATS ================= */}
+        <section className="stats-container">
+
+          <div className="stat-card">
+            <h3>Total Products</h3>
 
             <p>
-              Track and manage your products from one place.
+              {stats.total_products}
             </p>
           </div>
-        </div>
 
+          <div className="stat-card">
+            <h3>Active Products</h3>
 
-        {/* STATS */}
-        {!loading && !error && stats && (
-          <div className="stats-grid">
+            <p>
+              {stats.active_products}
+            </p>
+          </div>
 
-            <div className="stat-card">
-              <span className="stat-label">
-                Total Products
-              </span>
+          <div className="stat-card">
+            <h3>Total Value</h3>
 
-              <h3>
-                {stats.total_products}
-              </h3>
-            </div>
+            <p>
+              ₹{stats.total_value.toLocaleString("en-IN")}
+            </p>
+          </div>
 
+        </section>
 
-            <div className="stat-card">
-              <span className="stat-label">
-                Active Products
-              </span>
-
-              <h3>
-                {stats.active_products}
-              </h3>
-            </div>
-
-
-            <div className="stat-card">
-              <span className="stat-label">
-                Inactive Products
-              </span>
-
-              <h3>
-                {stats.inactive_products}
-              </h3>
-            </div>
-
-
-            <div className="stat-card">
-              <span className="stat-label">
-                Total Value
-              </span>
-
-              <h3>
-                ₹
-                {Number(
-                  stats.total_value
-                ).toLocaleString("en-IN")}
-              </h3>
-            </div>
-
+        {/* ================= ERROR ================= */}
+        {error && (
+          <div className="error-message">
+            {error}
           </div>
         )}
 
+        {/* ================= ADD PRODUCT ================= */}
+        <section className="product-section">
 
-        {/* ADD PRODUCT */}
-        <AddProduct
-          onProductAdded={fetchDashboardStats}
-        />
+          <AddProduct
+            onProductAdded={handleRefresh}
+          />
 
+        </section>
 
-        {/* PRODUCTS */}
-        <ProductList />
+        {/* ================= PRODUCT LIST ================= */}
+        <section className="product-section">
 
+          <ProductList />
 
-        {loading && (
-          <p className="loading-message">
-            Loading dashboard...
-          </p>
-        )}
-
-        {error && (
-          <p className="error-message">
-            {error}
-          </p>
-        )}
+        </section>
 
       </main>
 

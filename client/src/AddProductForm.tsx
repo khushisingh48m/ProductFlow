@@ -4,6 +4,8 @@ type AddProductProps = {
   onProductAdded: () => void;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function AddProduct({ onProductAdded }: AddProductProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -30,7 +32,7 @@ function AddProduct({ onProductAdded }: AddProductProps) {
       }
 
       const response = await fetch(
-        "${import.meta.env.VITE_API_URL}/api/products",
+        `${API_URL}/api/products`,
         {
           method: "POST",
           headers: {
@@ -61,11 +63,11 @@ function AddProduct({ onProductAdded }: AddProductProps) {
       setPrice("");
       setStatus("active");
 
-      // Refresh dashboard data
+      // Refresh dashboard data and product list
       onProductAdded();
 
     } catch (error) {
-      console.error(error);
+      console.error("Create product error:", error);
       setError("Unable to connect to server");
     } finally {
       setLoading(false);
@@ -74,11 +76,9 @@ function AddProduct({ onProductAdded }: AddProductProps) {
 
   return (
     <div className="add-product">
-
       <h2>Add New Product</h2>
 
       <form onSubmit={handleSubmit}>
-
         <input
           type="text"
           placeholder="Product name"
@@ -124,9 +124,7 @@ function AddProduct({ onProductAdded }: AddProductProps) {
         <button type="submit" disabled={loading}>
           {loading ? "Creating..." : "Add Product"}
         </button>
-
       </form>
-
     </div>
   );
 }

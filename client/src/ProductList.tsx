@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 type Product = {
   id: number;
   name: string;
   description: string;
-  price: string;
+  price: number;
   status: string;
-  created_at: string;
+  created_at?: string;
 };
 
 function ProductList() {
@@ -14,52 +16,55 @@ function ProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [editingProduct, setEditingProduct] =
-    useState<Product | null>(null);
+  const token = localStorage.getItem("token");
 
+  // ================================
+  // FETCH PRODUCTS
+  // ================================
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError("");
-
-      const token = localStorage.getItem("token");
 
       if (!token) {
         setError("Please login first");
         return;
       }
 
-      const response = await fetch(
-        "${import.meta.env.VITE_API_URL}/api/products",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/products`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to load products");
+      }
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.message || "Failed to fetch products");
-        return;
-      }
-
-      setProducts(data.products);
+      // Backend may return products directly
+      // or inside a products property.
+      setProducts(data.products || data);
     } catch (error) {
-      console.error(error);
-      setError("Unable to connect to server");
+      console.error("Fetch products error:", error);
+      setError("Unable to load products");
     } finally {
       setLoading(false);
     }
   };
 
+  // ================================
+  // LOAD PRODUCTS
+  // ================================
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  // ================================
   // DELETE PRODUCT
+  // ================================
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
@@ -70,10 +75,13 @@ function ProductList() {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Please login first");
+        return;
+      }
 
       const response = await fetch(
-       "${import.meta.env.VITE_API_URL}/api/products/${id}",
+        `${API_URL}/api/products/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -82,35 +90,57 @@ function ProductList() {
         }
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
-        alert(data.message || "Failed to delete product");
-        return;
+        throw new Error("Unable to delete product");
       }
 
-      alert("Product deleted successfully!");
-
-      fetchProducts();
+      // Remove deleted product from current list
+      setProducts((currentProducts) =>
+        currentProducts.filter((product) => product.id !== id)
+      );
     } catch (error) {
-      console.error(error);
-      alert("Unable to connect to server");
+      console.error("Delete product error:", error);
+      setError("Unable to delete product");
     }
   };
 
+  // ================================
   // UPDATE PRODUCT
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ================================
+  const handleEdit = async (product: Product) => {
+    const newName = window.prompt(
+      "Enter new product name:",
+      product.name
+    );
 
-    if (!editingProduct) {
+    if (newName === null) {
+      return;
+    }
+
+    const newPrice = window.prompt(
+      "Enter new price:",
+      String(product.price)
+    );
+
+    if (newPrice === null) {
+      return;
+    }
+
+    const priceNumber = Number(newPrice);
+
+    if (Number.isNaN(priceNumber)) {
+      alert("Please enter a valid price.");
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Please login first");
+        return;
+      }
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${editingProduct.id}`,
+        `${API_URL}/api/products/${product.id}`,
         {
           method: "PUT",
           headers: {
@@ -118,234 +148,117 @@ function ProductList() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            name: editingProduct.name,
-            description: editingProduct.description,
-            price: Number(editingProduct.price),
-            status: editingProduct.status,
+            name: newName,
+            description: product.description,
+            price: priceNumber,
+            status: product.status,
           }),
         }
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
-        alert(data.message || "Failed to update product");
-        return;
+        throw new Error("Unable to update product");
       }
 
-      alert("Product updated successfully!");
-
-      setEditingProduct(null);
-
-      fetchProducts();
+      await fetchProducts();
     } catch (error) {
-      console.error(error);
-      alert("Unable to connect to server");
+      console.error("Update product error:", error);
+      setError("Unable to update product");
     }
   };
 
+  // ================================
+  // LOADING
+  // ================================
   if (loading) {
     return (
-      <div className="product-loading">
+      <div className="product-list">
+        <h2>Products</h2>
         <p>Loading products...</p>
       </div>
     );
   }
 
-  if (error) {
-    return <p className="error-message">{error}</p>;
-  }
-
+  // ================================
+  // UI
+  // ================================
   return (
     <div className="product-list">
-      <div className="section-heading">
-        <div>
-          <h2>My Products</h2>
-          <p>Manage all your products from here.</p>
-        </div>
 
-        <span className="product-count">
-          {products.length}{" "}
-          {products.length === 1 ? "Product" : "Products"}
-        </span>
+      <div className="product-list-header">
+        <h2>Your Products</h2>
+
+        <button
+          type="button"
+          onClick={fetchProducts}
+        >
+          Refresh Products
+        </button>
       </div>
 
-      {/* EDIT FORM */}
-      {editingProduct && (
-        <div className="edit-product">
-          <div className="edit-header">
-            <div>
-              <h3>Edit Product</h3>
-              <p>Update the details of your product.</p>
-            </div>
-
-            <button
-              type="button"
-              className="close-edit"
-              onClick={() => setEditingProduct(null)}
-            >
-              ✕
-            </button>
-          </div>
-
-          <form onSubmit={handleUpdate}>
-            <div className="edit-field">
-              <label>Product Name</label>
-
-              <input
-                type="text"
-                value={editingProduct.name}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    name: e.target.value,
-                  })
-                }
-                placeholder="Product name"
-                required
-              />
-            </div>
-
-            <div className="edit-field">
-              <label>Description</label>
-
-              <textarea
-                value={editingProduct.description}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    description: e.target.value,
-                  })
-                }
-                placeholder="Product description"
-              />
-            </div>
-
-            <div className="edit-field">
-              <label>Price</label>
-
-              <input
-                type="number"
-                value={editingProduct.price}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    price: e.target.value,
-                  })
-                }
-                placeholder="Price"
-                required
-              />
-            </div>
-
-            <div className="edit-field">
-              <label>Status</label>
-
-              <select
-                value={editingProduct.status}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    status: e.target.value,
-                  })
-                }
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="edit-buttons">
-              <button type="submit" className="save-button">
-                Save Changes
-              </button>
-
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={() => setEditingProduct(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+      {error && (
+        <p className="error-message">
+          {error}
+        </p>
       )}
 
-      {/* PRODUCT LIST */}
       {products.length === 0 ? (
-        <div className="empty-products">
-          <div className="empty-icon">📦</div>
-
-          <h3>No products yet</h3>
-
-          <p>
-            Add your first product using the form above.
-          </p>
-        </div>
+        <p>No products found.</p>
       ) : (
-        <div className="products-grid">
-          {products.map((product) => (
-            <div className="product-card" key={product.id}>
-              <div className="product-card-top">
-                <div className="product-icon">
-                  {product.name.charAt(0).toUpperCase()}
-                </div>
+        <div className="products-container">
 
-                <span
-                  className={`status-badge ${
-                    product.status === "active"
-                      ? "status-active"
-                      : "status-inactive"
-                  }`}
-                >
-                  {product.status}
-                </span>
-              </div>
+          {products.map((product) => (
+            <div
+              className="product-card"
+              key={product.id}
+            >
 
               <div className="product-info">
-                <h3>{product.name}</h3>
 
-                <p className="product-description">
-                  {product.description ||
-                    "No description available."}
+                <h3>
+                  {product.name}
+                </h3>
+
+                <p>
+                  {product.description}
                 </p>
+
+                <p>
+                  <strong>Price:</strong>{" "}
+                  ₹{Number(product.price).toLocaleString("en-IN")}
+                </p>
+
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {product.status}
+                </p>
+
               </div>
 
-              <div className="product-price">
-                <span>Price</span>
+              <div className="product-actions">
 
-                <strong>
-                  ₹
-                  {Number(product.price).toLocaleString(
-                    "en-IN"
-                  )}
-                </strong>
-              </div>
-
-              <div className="product-card-footer">
                 <button
-                  className="edit-button"
-                  onClick={() =>
-                    setEditingProduct(product)
-                  }
+                  type="button"
+                  onClick={() => handleEdit(product)}
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
 
                 <button
-                  className="delete-button"
-                  onClick={() =>
-                    handleDelete(product.id)
-                  }
+                  type="button"
+                  onClick={() => handleDelete(product.id)}
                 >
-                  🗑️ Delete
+                  Delete
                 </button>
+
               </div>
+
             </div>
           ))}
+
         </div>
       )}
+
     </div>
   );
 }

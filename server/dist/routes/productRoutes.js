@@ -30,14 +30,14 @@ router.post("/", authMiddleware_1.authenticateToken, async (req, res) => {
             status || "active",
             user.userId,
         ]);
-        res.status(201).json({
+        return res.status(201).json({
             message: "Product created successfully",
             product: result.rows[0],
         });
     }
     catch (error) {
         console.error("Create product error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
@@ -52,14 +52,14 @@ router.get("/", authMiddleware_1.authenticateToken, async (req, res) => {
         const result = await db_1.default.query(`SELECT * FROM products
        WHERE created_by = $1
        ORDER BY created_at DESC`, [user.userId]);
-        res.json({
+        return res.json({
             message: "Products fetched successfully",
             products: result.rows,
         });
     }
     catch (error) {
         console.error("Get products error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
@@ -93,14 +93,14 @@ router.put("/:id", authMiddleware_1.authenticateToken, async (req, res) => {
                 message: "Product not found",
             });
         }
-        res.json({
+        return res.json({
             message: "Product updated successfully",
             product: result.rows[0],
         });
     }
     catch (error) {
         console.error("Update product error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
@@ -121,14 +121,14 @@ router.delete("/:id", authMiddleware_1.authenticateToken, async (req, res) => {
                 message: "Product not found",
             });
         }
-        res.json({
+        return res.json({
             message: "Product deleted successfully",
             product: result.rows[0],
         });
     }
     catch (error) {
         console.error("Delete product error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
@@ -141,20 +141,25 @@ router.get("/dashboard/stats", authMiddleware_1.authenticateToken, async (req, r
     try {
         const user = req.user;
         const result = await db_1.default.query(`SELECT
-        COUNT(*) AS total_products,
-        COUNT(*) FILTER (WHERE status = 'active') AS active_products,
-        COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_products,
-        COALESCE(SUM(price), 0) AS total_value
-       FROM products
-       WHERE created_by = $1`, [user.userId]);
-        res.json({
+          COUNT(*) AS total_products,
+          COUNT(*) FILTER (WHERE status = 'active') AS active_products,
+          COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_products,
+          COALESCE(SUM(price), 0) AS total_value
+         FROM products
+         WHERE created_by = $1`, [user.userId]);
+        const stats = result.rows[0];
+        return res.json({
             message: "Dashboard stats fetched successfully",
-            stats: result.rows[0],
+            // Send stats directly because App.tsx
+            // expects data.total_products etc.
+            total_products: Number(stats.total_products),
+            active_products: Number(stats.active_products),
+            total_value: Number(stats.total_value),
         });
     }
     catch (error) {
         console.error("Dashboard stats error:", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
         });
     }
