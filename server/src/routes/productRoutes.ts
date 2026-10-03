@@ -36,7 +36,7 @@ router.post("/", authenticateToken, async (req, res) => {
       ]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Product created successfully",
       product: result.rows[0],
     });
@@ -44,7 +44,7 @@ router.post("/", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Create product error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
     });
   }
@@ -67,7 +67,7 @@ router.get("/", authenticateToken, async (req, res) => {
       [user.userId]
     );
 
-    res.json({
+    return res.json({
       message: "Products fetched successfully",
       products: result.rows,
     });
@@ -75,7 +75,7 @@ router.get("/", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Get products error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
     });
   }
@@ -119,7 +119,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       message: "Product updated successfully",
       product: result.rows[0],
     });
@@ -127,7 +127,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Update product error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
     });
   }
@@ -158,7 +158,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       message: "Product deleted successfully",
       product: result.rows[0],
     });
@@ -166,44 +166,57 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Delete product error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
     });
   }
 });
+
+
 // ==========================================
 // DASHBOARD STATS
 // GET /api/products/dashboard/stats
 // ==========================================
 
-router.get("/dashboard/stats", authenticateToken, async (req, res) => {
-  try {
-    const user = (req as any).user;
+router.get(
+  "/dashboard/stats",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const user = (req as any).user;
 
-    const result = await pool.query(
-      `SELECT
-        COUNT(*) AS total_products,
-        COUNT(*) FILTER (WHERE status = 'active') AS active_products,
-        COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_products,
-        COALESCE(SUM(price), 0) AS total_value
-       FROM products
-       WHERE created_by = $1`,
-      [user.userId]
-    );
+      const result = await pool.query(
+        `SELECT
+          COUNT(*) AS total_products,
+          COUNT(*) FILTER (WHERE status = 'active') AS active_products,
+          COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_products,
+          COALESCE(SUM(price), 0) AS total_value
+         FROM products
+         WHERE created_by = $1`,
+        [user.userId]
+      );
 
-    res.json({
-      message: "Dashboard stats fetched successfully",
-      stats: result.rows[0],
-    });
+      const stats = result.rows[0];
 
-  } catch (error) {
-    console.error("Dashboard stats error:", error);
+      return res.json({
+        message: "Dashboard stats fetched successfully",
 
-    res.status(500).json({
-      message: "Server error",
-    });
+        // Send stats directly because App.tsx
+        // expects data.total_products etc.
+        total_products: Number(stats.total_products),
+        active_products: Number(stats.active_products),
+        total_value: Number(stats.total_value),
+      });
+
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+
+      return res.status(500).json({
+        message: "Server error",
+      });
+    }
   }
-});
+);
 
 
 export default router;
