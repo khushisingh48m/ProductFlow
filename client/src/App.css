@@ -1,24 +1,36 @@
-/* ================================
-   GLOBAL
-================================ */
 
+/* GLOBAL RESET */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
-  margin: 0;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-
+  display: block;
+  min-width: 320px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
   background: #f4f7fb;
   color: #172033;
+}
+
+#root {
+  max-width: none;
+  text-align: left;
 }
 
 button,
@@ -32,32 +44,23 @@ button {
   cursor: pointer;
 }
 
-
-/* ================================
-   MAIN APP
-================================ */
-
+/* MAIN APP */
 .app-container {
+  width: 100%;
   min-height: 100vh;
   background: #f4f7fb;
 }
 
-
-/* ================================
-   HEADER
-================================ */
-
+/* HEADER */
 .app-header {
   width: 100%;
-  background: #ffffff;
+  background: #fff;
   border-bottom: 1px solid #e5eaf1;
-
-  padding: 22px 7%;
-
+  padding: 22px 5%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  gap: 20px;
   box-shadow: 0 2px 12px rgba(20, 40, 80, 0.04);
 }
 
@@ -70,41 +73,28 @@ button {
 .logo {
   width: 54px;
   height: 54px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
+  flex-shrink: 0;
   border-radius: 14px;
-
-  background: linear-gradient(
-    135deg,
-    #2563eb,
-    #4f46e5
-  );
-
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: white;
-
   font-size: 19px;
   font-weight: 800;
-
   box-shadow: 0 7px 18px rgba(37, 99, 235, 0.25);
 }
 
 .brand-section h1 {
   margin: 0;
-
   font-size: 25px;
   font-weight: 750;
-
   color: #111827;
 }
 
 .brand-section p {
-  margin: 4px 0 0;
-
+  margin-top: 4px;
   color: #6b7280;
-
   font-size: 14px;
 }
 
@@ -114,32 +104,20 @@ button {
   gap: 10px;
 }
 
-
-/* ================================
-   HEADER BUTTONS
-================================ */
-
+/* HEADER BUTTONS */
 .refresh-button,
 .logout-button {
   border: none;
-
   padding: 11px 19px;
-
   border-radius: 9px;
-
   font-size: 14px;
   font-weight: 650;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .refresh-button {
   background: #2563eb;
   color: white;
-
   box-shadow: 0 5px 12px rgba(37, 99, 235, 0.2);
 }
 
@@ -153,176 +131,106 @@ button {
   transform: translateY(-1px);
 }
 
-.refresh-button:hover {
-  background: #1d4ed8;
-}
-
-.logout-button:hover {
-  background: #e0e7ff;
-}
-
-
-/* ================================
-   DASHBOARD
-================================ */
-
+/* DASHBOARD */
 .dashboard {
   width: min(1180px, 92%);
+  max-width: 1180px;
   margin: 0 auto;
-
   padding: 45px 0 70px;
+  min-width: 0;
 }
 
-
-/* ================================
-   WELCOME SECTION
-================================ */
-
+/* WELCOME */
 .welcome-section {
   text-align: center;
   margin-bottom: 30px;
 }
 
 .welcome-section h2 {
-  margin: 0;
-
   font-size: 31px;
   font-weight: 750;
-
   color: #111827;
 }
 
 .welcome-section > p {
-  margin: 8px 0 0;
-
+  margin-top: 8px;
   color: #64748b;
-
   font-size: 15px;
 }
 
 .welcome-user {
   margin-top: 12px !important;
-
   color: #2563eb !important;
-
   font-weight: 650;
 }
 
-
-/* ================================
-   STATS
-================================ */
-
+/* STATS */
 .stats-container {
   display: grid;
-
-  grid-template-columns: repeat(3, 1fr);
-
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
-
   margin-bottom: 30px;
+  width: 100%;
 }
 
 .stat-card {
+  min-width: 0;
   background: white;
-
   border: 1px solid #e7ebf2;
-
   border-radius: 16px;
-
   padding: 25px;
-
   text-align: center;
-
-  box-shadow:
-    0 5px 20px rgba(15, 23, 42, 0.05);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+  transition: 0.2s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-3px);
-
-  box-shadow:
-    0 10px 28px rgba(15, 23, 42, 0.08);
 }
 
 .stat-card h3 {
-  margin: 0 0 10px;
-
+  margin-bottom: 10px;
   color: #64748b;
-
   font-size: 14px;
   font-weight: 600;
-
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .stat-card p {
-  margin: 0;
-
   color: #111827;
-
   font-size: 30px;
   font-weight: 750;
 }
 
-
-/* ================================
-   ERROR
-================================ */
-
+/* ERRORS */
 .error-message {
   margin: 15px 0;
-
   padding: 12px 16px;
-
   background: #fef2f2;
-
   border: 1px solid #fecaca;
-
   border-radius: 10px;
-
   color: #dc2626;
-
   font-size: 14px;
-
   text-align: center;
 }
 
-
-/* ================================
-   PRODUCT SECTION
-================================ */
-
+/* PRODUCT SECTIONS */
 .product-section {
+  width: 100%;
+  min-width: 0;
   background: white;
-
   border: 1px solid #e7ebf2;
-
   border-radius: 18px;
-
   padding: 28px;
-
   margin-top: 22px;
-
-  box-shadow:
-    0 5px 20px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
 }
 
-
-/* ================================
-   SECTION HEADINGS
-================================ */
-
 .product-section h2 {
-  margin: 0 0 20px;
-
+  margin-bottom: 20px;
   font-size: 22px;
-
   color: #111827;
 }
 
@@ -330,29 +238,11 @@ button {
   color: #172033;
 }
 
-
-/* ================================
-   ADD PRODUCT FORM
-================================ */
-
-/*
-  Works with the existing
-  AddProductForm component even
-  if it doesn't have custom classes.
-*/
-
+/* ADD PRODUCT FORM */
 .product-section form {
   display: grid;
-
-  grid-template-columns:
-    1.2fr
-    1.5fr
-    0.8fr
-    0.8fr
-    auto;
-
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
   gap: 12px;
-
   align-items: center;
 }
 
@@ -360,100 +250,58 @@ button {
 .product-section textarea,
 .product-section select {
   width: 100%;
-
+  min-width: 0;
   border: 1px solid #d8dee9;
-
-  background: #ffffff;
-
+  background: white;
   color: #172033;
-
   border-radius: 9px;
-
   padding: 12px 14px;
-
   font-size: 14px;
-
   outline: none;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
 .product-section textarea {
   min-height: 45px;
-
   resize: vertical;
-}
-
-.product-section input::placeholder,
-.product-section textarea::placeholder {
-  color: #94a3b8;
 }
 
 .product-section input:focus,
 .product-section textarea:focus,
 .product-section select:focus {
   border-color: #2563eb;
-
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-
-/* ================================
-   FORM BUTTONS
-================================ */
-
+/* FORM BUTTONS */
 .product-section form button,
 .product-section > button {
   border: none;
-
   background: #2563eb;
-
   color: white;
-
   padding: 12px 20px;
-
   border-radius: 9px;
-
   font-size: 14px;
-
   font-weight: 650;
-
   white-space: nowrap;
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .product-section form button:hover,
 .product-section > button:hover {
   background: #1d4ed8;
-
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 5px 14px rgba(37, 99, 235, 0.2);
 }
 
-
-/* ================================
-   PRODUCT LIST
-================================ */
-
+/* PRODUCT LIST */
 .product-list {
   width: 100%;
+  min-width: 0;
 }
 
 .product-list-header {
   display: flex;
-
   align-items: center;
   justify-content: space-between;
-
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -463,17 +311,11 @@ button {
 
 .product-list-header button {
   border: none;
-
   background: #eff6ff;
-
   color: #2563eb;
-
   padding: 9px 14px;
-
   border-radius: 8px;
-
   font-size: 13px;
-
   font-weight: 600;
 }
 
@@ -481,71 +323,39 @@ button {
   background: #dbeafe;
 }
 
-
-/* ================================
-   PRODUCTS CONTAINER
-================================ */
-
+/* PRODUCT CARDS */
 .products-container {
   display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 15px;
 }
 
-
-/* ================================
-   PRODUCT CARD
-================================ */
-
 .product-card {
+  min-width: 0;
   border: 1px solid #e5eaf1;
-
   border-radius: 13px;
-
   padding: 20px;
-
-  background: #ffffff;
-
+  background: white;
   display: flex;
-
   justify-content: space-between;
-
   gap: 20px;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 8px 22px rgba(15, 23, 42, 0.07);
 }
 
 .product-info {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .product-info h3 {
-  margin: 0 0 8px;
-
+  margin-bottom: 8px;
   font-size: 18px;
-
   color: #111827;
 }
 
 .product-info p {
   margin: 6px 0;
-
   color: #64748b;
-
   font-size: 14px;
-
   line-height: 1.5;
 }
 
@@ -553,82 +363,45 @@ button {
   color: #334155;
 }
 
-
-/* ================================
-   PRODUCT ACTIONS
-================================ */
-
+/* PRODUCT ACTIONS */
 .product-actions {
   display: flex;
-
   flex-direction: column;
-
   gap: 8px;
-
   min-width: 75px;
 }
 
 .product-actions button {
   border: none;
-
   padding: 8px 12px;
-
   border-radius: 8px;
-
   font-size: 13px;
-
   font-weight: 600;
-
-  transition: background 0.2s ease;
 }
 
 .product-actions button:first-child {
   background: #eff6ff;
-
   color: #2563eb;
-}
-
-.product-actions button:first-child:hover {
-  background: #dbeafe;
 }
 
 .product-actions button:last-child {
   background: #fef2f2;
-
   color: #dc2626;
 }
 
-.product-actions button:last-child:hover {
-  background: #fee2e2;
-}
-
-
-/* ================================
-   LOADING
-================================ */
-
+/* LOADING */
 .loading {
   min-height: 100vh;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
-
   color: #2563eb;
-
   font-size: 18px;
-
   font-weight: 650;
 }
 
-
-/* ================================
-   RESPONSIVE - TABLET
-================================ */
-
+/* TABLET */
 @media (max-width: 900px) {
-
   .app-header {
     padding: 20px 4%;
   }
@@ -638,11 +411,11 @@ button {
   }
 
   .stats-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .product-section form {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .products-container {
@@ -650,18 +423,11 @@ button {
   }
 }
 
-
-/* ================================
-   RESPONSIVE - MOBILE
-================================ */
-
+/* MOBILE */
 @media (max-width: 600px) {
-
   .app-header {
     flex-direction: column;
-
     align-items: flex-start;
-
     gap: 18px;
   }
 
@@ -675,13 +441,16 @@ button {
   }
 
   .dashboard {
-    width: 94%;
-
+    width: 92%;
     padding-top: 30px;
   }
 
   .welcome-section h2 {
     font-size: 25px;
+  }
+
+  .stats-container {
+    grid-template-columns: 1fr;
   }
 
   .product-section {
@@ -706,10 +475,7 @@ button {
 
   .product-list-header {
     flex-direction: column;
-
     align-items: flex-start;
-
-    gap: 12px;
   }
 
   .product-list-header button {
