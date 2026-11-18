@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 type LoginProps = {
@@ -9,30 +10,23 @@ const API_URL = import.meta.env.VITE_API_URL;
 function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await response.json();
 
@@ -42,7 +36,6 @@ function Login({ onLogin }: LoginProps) {
       }
 
       localStorage.setItem("token", data.token);
-
       onLogin();
     } catch (error) {
       console.error("Login error:", error);
@@ -53,30 +46,68 @@ function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-
-        <div className="login-logo">
-          <div className="logo-icon">PF</div>
-          <h1>ProductFlow</h1>
-          <p>Manage your products with ease</p>
+    <div className="login-page">
+      <div className="login-left">
+        <div className="brand">
+          <div className="brand-logo">PF</div>
+          <span>ProductFlow</span>
         </div>
 
-        <div className="login-content">
-          <h2>Welcome back</h2>
+        <div className="login-hero">
+          <span className="hero-tag">PRODUCT MANAGEMENT MADE SIMPLE</span>
 
-          <p className="login-subtitle">
-            Login to your ProductFlow account
+          <h1>
+            Manage smarter.
+            <br />
+            Grow faster.
+          </h1>
+
+          <p>
+            Keep your products organized, track performance,
+            and manage your business from one simple dashboard.
           </p>
 
+          <div className="hero-features">
+            <div className="hero-feature">
+              <span>✓</span>
+              Easy product management
+            </div>
+            <div className="hero-feature">
+              <span>✓</span>
+              Real-time dashboard insights
+            </div>
+            <div className="hero-feature">
+              <span>✓</span>
+              Secure account access
+            </div>
+          </div>
+        </div>
+
+        <div className="left-footer">
+          © 2026 ProductFlow. All rights reserved.
+        </div>
+      </div>
+
+      <div className="login-right">
+        <div className="login-form-wrapper">
+          <div className="mobile-brand">
+            <div className="brand-logo">PF</div>
+            <span>ProductFlow</span>
+          </div>
+
+          <div className="form-heading">
+            <span className="welcome-label">WELCOME BACK</span>
+            <h2>Sign in to your account</h2>
+            <p>Enter your details to access your dashboard.</p>
+          </div>
+
           <form onSubmit={handleLogin}>
-
             <div className="input-group">
-              <label>Email</label>
-
+              <label htmlFor="email">Email address</label>
               <input
+                id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -84,38 +115,45 @@ function Login({ onLogin }: LoginProps) {
             </div>
 
             <div className="input-group">
-              <label>Password</label>
+              <label htmlFor="password">Password</label>
 
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="password-wrapper">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
-            {error && (
-              <div className="login-error">
-                {error}
-              </div>
-            )}
+            {error && <div className="login-error">{error}</div>}
 
             <button
               type="submit"
               disabled={loading}
               className="login-button"
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Signing in..." : "Sign in"}
+              {!loading && <span>→</span>}
             </button>
-
           </form>
-        </div>
 
-        <div className="login-footer">
-          ProductFlow • Product Management Platform
+          <div className="secure-note">
+            <span>🔒</span>
+            Your account is protected with secure authentication.
+          </div>
         </div>
-
       </div>
     </div>
   );
